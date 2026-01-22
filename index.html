@@ -3326,56 +3326,25 @@
     // ==================== ВХОД ====================
     function handleLogin(event) {
       event.preventDefault();
-
-      const email = document.getElementById('login-email').value.trim();
+      const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
 
-      // Валидация входных данных
-      if (!email || !password) {
-        alert('Пожалуйста, заполните все поля!');
-        return;
-      }
-
-      if (!email.includes('@') || !email.includes('.')) {
-        alert('Введите корректный email адрес!');
-        return;
-      }
-
-      if (password.length < 8) {
-        alert('Пароль должен быть минимум 8 символов!');
-        return;
-      }
-
-      const loginBtn = document.getElementById('loginBtn');
-      loginBtn.disabled = true;
-      loginBtn.innerHTML = '<span class="loading"></span>Вход...';
-
-      // Получаем список пользователей
       const users = getAllUsers();
-
-      // Ищем пользователя по email и паролю
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      const user = users.find(u => u.email === email && u.password === password);
 
       if (user) {
-        // Проверка на заблокированные аккаунты
         if (user.username === 'Manager' && user.email === 'slavakobeccc@gmail.com' && user.isManager) {
           alert('Доступ к этому аккаунту ограничен!');
-          loginBtn.disabled = false;
-          loginBtn.textContent = 'Войти';
           return;
         }
 
-        // Проверка на мьют
         if (user.isMuted && user.muteUntil) {
           const muteUntil = new Date(user.muteUntil);
           if (muteUntil > new Date()) {
             const timeLeft = Math.ceil((muteUntil - new Date()) / (1000 * 60 * 60));
             alert(`Вы замьючены! Причина: ${user.muteReason}\nДо размута: ${timeLeft} часов`);
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Войти';
             return;
           } else {
-            // Снимаем мьют если время истекло
             user.isMuted = false;
             user.muteReason = '';
             user.muteUntil = null;
@@ -3383,44 +3352,25 @@
           }
         }
 
-        // Сохраняем данные пользователя в localStorage
         localStorage.setItem('userId', user.id);
         localStorage.setItem('username', user.username);
         localStorage.setItem('email', user.email);
         localStorage.setItem('isLoggedIn', 'true');
 
-        // Обновляем глобальные переменные
         isLoggedIn = true;
         isGuestMode = false;
         currentUserData = user;
-
-        // Обновляем активность пользователя
-        addUserActivity(user.id, 'Вошел в аккаунт');
-
-        // Скрываем модальное окно входа и показываем основной сайт
+        
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById('mainSite').style.display = 'block';
-
-        // Обновляем профиль и интерфейс
+        
         updateProfile(user.username, user.email);
-        showNotification('Вход выполнен', `Добро пожаловать, ${user.username}!`);
-
-        // Переходим на главную страницу через небольшую задержку
+        showNotification('Вход выполнен', 'Добро пожаловать обратно!');
+        
         setTimeout(() => navigateTo('home'), 500);
-
       } else {
-        // Проверяем существует ли пользователь с таким email
-        const userExists = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        if (userExists) {
-          alert('Неверный пароль! Проверьте введенные данные.');
-        } else {
-          alert('Пользователь с таким email не найден! Проверьте email или зарегистрируйтесь.');
-        }
+        alert('Неверный email или пароль!');
       }
-
-      // Восстанавливаем кнопку
-      loginBtn.disabled = false;
-      loginBtn.textContent = 'Войти';
     }
 
     // ==================== ВОССТАНОВЛЕНИЕ ПАРОЛЯ ====================
